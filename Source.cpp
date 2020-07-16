@@ -53,6 +53,8 @@ void extract(string str, int i)
 		cc++;
 		temp = "";
 	}
+	
+	nets[i].numPoints = inc + 1; //Store the number of points there are in the net
 }
 
 //MAIN
@@ -94,10 +96,11 @@ void main()
 
 
 	//*************************************************************** DEBUG Section ***************************************************************//
-	/*cout << nets[2].getNetNum() << endl;
-	cout << nets[2].getLayer(2) << endl;
-	cout << nets[2].getPinx(2) << endl;
-	cout << nets[2].getPiny(2);*/
+	/*cout << nets[1].getNetNum() << endl;
+	cout << nets[1].getLayer(1) << endl;
+	cout << nets[1].getPinx(1) << endl;
+	cout << nets[1].getPiny(1) << endl;
+	cout << nets[1].numPoints;*/
 	
 	//Closing "input" file
 	inFile.close();
