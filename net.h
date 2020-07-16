@@ -12,6 +12,8 @@ private:
 	coord netCoor[20]; //Assuming there won't be more than 20 points in the net
 
 public:
+	int numPoints = 0;
+	
 	bool setNum(int num)
 	{
 		netNum = num;
