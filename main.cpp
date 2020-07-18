@@ -203,27 +203,27 @@ int main()
 	for (int i = 0; i < num; i++) {
 
 		int counter2 = 0; //Counter that keeps track of the nets that have been connected 
-		int next_destination = counter2 + 1;
-		//Set all untaken cells back to available to prepare for the next net values
-		for (int d = 0; d < 1000; d++) {
-			for (int f = 0; f < 1000; f++) {
-				if (!visits[f][d].st == taken) {
-					visits[f][d].st = available;
-					visits[f][d].distance_from_source = 0;
-				}
-			}
-		}
+		int next_destination = 0;
+		int counter = nets[i].numPoints -1; //Counter that keeps track of the number of points in the net
 
-		int counter = nets[i].numPoints; //Counter that keeps track of the number of points in the net
-
-		while (counter2 < counter - 1)
+		while (counter2 < counter)
 		{
 			int dist = 1;
-			int min_dist;
+			int min_dist = 0;
+			next_destination = next_destination + 1;
+
+			for (int d = 0; d < 1000; d++) {
+				for (int f = 0; f < 1000; f++) {
+					if (visits[f][d].st != taken) {
+						visits[f][d].st = available;
+						visits[f][d].distance_from_source = 0;
+					}
+				}
+			}
 
 			//Setting the values of the source and the destination accordingly
-			int x_coord = nets[i].getPinx(counter2);
-			int y_coord = nets[i].getPiny(counter2);
+			int x_coord = nets[i].getPinx(0);
+			int y_coord = nets[i].getPiny(0);
 			int x_destination = nets[i].getPinx(next_destination);
 			int y_destination = nets[i].getPiny(next_destination);
 
@@ -231,7 +231,7 @@ int main()
 			all.push({ x_coord, y_coord, dist }); //Pushing source into queue
 			visits[y_coord][x_coord].distance_from_source = all.front().distance;
 
-			int x_next, y_next, huh = 0;
+			int x_next = 0, y_next = 0;
 
 			//Pathfinding loop, keeps running until the source gets popped again
 			while (!all.empty())
@@ -255,6 +255,8 @@ int main()
 						while (!all.empty()) { all.pop(); }
 					}
 
+					/*if (inbound(x_next, y_next) && counter2 != 0) cout << "true_inbound" << endl;
+					if (visits[y_next][x_next].st == available && counter2 != 0) cout << "it is available" << endl;*/
 
 
 					else if (inbound(x_next,y_next) && visits[y_next][x_next].st == available)
@@ -267,7 +269,6 @@ int main()
 				}
 				if (!all.empty())
 					all.pop();
-				huh++;
 			}
 			counter2++;
 		}
