@@ -33,104 +33,87 @@ bool inbound(int x_next, int y_next) {
 
 //Function that connects the pins
 void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum) {
-	visits[x_dest][y_dest].st = taken;
+	visits[y_dest][x_dest].st = taken;
 
 	int dist_final = distance;
 	int extra_cost = 3;
 	int x_next = x_dest, y_next = y_dest;
 
 	visits[x_dest][y_dest].netn = netnum;
-	visits[x_dest][y_dest].st = taken;
+
 
 	while (dist_final > 1) {
-
+		visits[x_next][y_next].st = taken;
 		bool up_check = false, down_check = false, right_check = false, left_check = false, tie_break = false;
-		int right_diff = 0, horizontal_direction = 0, horizontal_difference = 0, vertical_difference = 0, vertical_direction = 0, up_diff = 0;
-		/*bool inbound_check = false;
-		bool visit_check = false;*/
+		int right_diff = 0, horizontal_direction = 0, horizontal_difference = 0, vertical_difference = 0, vertical_direction = 0, up_diff = 0, vertical_cost = 0, horizontal_cost = 0;
+		int up_val = 0, down_val = 0, left_val = 0, right_val = 0;
+		int x_temp = x_next, y_temp = y_next;
+		visits[x_next][y_next].netn = netnum;
 
-		//cout << endl << visits[x_next][y_next - 1].st << endl;
 
-		if (inbound(x_next - 1, y_next) && visits[x_next - 1][y_next].st == visited) {
-			left_check = true;
-		}
-		if (inbound(x_next, y_next + 1) && visits[x_next][y_next +1].st == visited) {
-			down_check = true;
-		}
-		if (inbound(x_next +1, y_next) && visits[x_next +1][y_next].st == visited) {
-			right_check = true;
-		}
-		if (inbound(x_next, y_next -1) && visits[x_next][y_next -1].st == visited) {
+		if (inbound(x_next, y_next - 1) && visits[y_next - 1][x_next].st == visited) {
 			up_check = true;
-			//inbound_check = inbound(x_next, y_next - 1);
-			//visit_check = visits[x_next][y_next - 1].st == visited;
+			up_val = visits[y_next - 1][x_next].distance_from_source;
+		}
+		if (inbound(x_next, y_next + 1) && visits[y_next +1][x_next].st == visited) {
+			down_check = true;
+			down_val = visits[y_next + 1][x_next].distance_from_source;
+		}
+		if (inbound(x_next - 1, y_next) && visits[y_next][x_next - 1].st == visited) {
+			left_check = true;
+			left_val = visits[y_next][x_next - 1].distance_from_source;
+		}
+		if (inbound(x_next +1, y_next) && visits[y_next][x_next +1].st == visited) {
+			right_check = true;
+			right_val = visits[y_next ][x_next +1].distance_from_source;
 		}
 
-		//if (inbound_check) cout << "inbound_check" << endl;
-		//if (visit_check) cout << "visit_check" << endl;
+		horizontal_difference = right_val - left_val;
+		vertical_difference = up_val - down_val;
 
-		if (left_check && right_check) {
-			horizontal_difference = visits[x_next + 1][y_next].distance_from_source - visits[x_next - 1][y_next].distance_from_source;
-			if (horizontal_difference > 0) {
-				right_diff = x_next - 1;
-				horizontal_direction = visits[x_next - 1][y_next].distance_from_source;
-			}
-			else if (horizontal_difference < 0) {
-				right_diff = x_next + 1;
-				horizontal_direction = visits[x_next + 1][y_next].distance_from_source;
-			}
+		if (horizontal_difference > 0) {
+			if (left_check) x_temp = x_temp - 1;
+			else x_temp = x_temp + 1;
 		}
-			else if (!left_check && right_check) {
-				horizontal_direction = visits[x_next + 1][y_next].distance_from_source;
-				right_diff = x_next + 1;
-			}
-				else if (left_check && !right_check) {
-					horizontal_direction = visits[x_next - 1][y_next].distance_from_source;
-					right_diff = x_next - 1;
-				}
-		if (up_check && down_check) {
-			vertical_difference = visits[x_next][y_next +1].distance_from_source - visits[x_next][y_next - 1].distance_from_source;
-			if (vertical_difference > 0) {
-				up_diff = x_next - 1;
-				vertical_direction = visits[x_next][y_next - 1].distance_from_source;
-			}
-			else if (vertical_difference < 0) {
-				up_diff = x_next + 1;
-				vertical_direction = visits[x_next][y_next + 1].distance_from_source;
-			}
+		else if (horizontal_difference < 0) {
+			if (right_check) x_temp = x_temp + 1;
+			else x_temp = x_temp - 1;
 		}
-			else if (!up_check && down_check) {
-				horizontal_direction = visits[x_next][y_next -1].distance_from_source;
-				up_diff = y_next - 1;
-			}
-				else if (up_check && !down_check) {
-				horizontal_direction = visits[x_next][y_next + 1].distance_from_source;
-				up_diff = y_next + 1;
-				}
+		else x_temp = x_temp;
+
+
+		if (vertical_difference > 0) {
+			if (down_check) y_temp = y_temp + 1;
+			else y_temp = y_temp - 1;
+		}
+		else if (vertical_difference < 0) {
+			if (up_check) y_temp = y_temp - 1;
+			else y_temp = y_temp + 1;
+		}
+		else y_temp = y_temp;
+
 
 		if (layer_num == 1) {
-			vertical_direction = vertical_direction + extra_cost;
-			tie_break = true;
+			vertical_cost = visits[y_temp][x_next].distance_from_source + extra_cost;
+			horizontal_cost = visits[y_next][x_temp].distance_from_source;
 		}
 			else if (layer_num == 2) {
-				horizontal_direction = horizontal_direction + extra_cost;
+			vertical_cost = visits[y_temp][x_next].distance_from_source;
+			horizontal_cost = visits[y_next][x_temp].distance_from_source + extra_cost;
 			}
 
-		if (vertical_direction > horizontal_direction) x_dest = right_diff;
-		else if (vertical_direction < horizontal_direction) y_dest = up_diff;
-		else {
-			if (tie_break) x_dest = right_diff;
-			else y_dest = up_diff;
+		if (horizontal_cost > vertical_cost)
+		{
+			if (vertical_difference != 0)y_next = y_temp;
+			else  x_next = x_temp;
+		}
+		else 
+		{
+			if (horizontal_difference != 0)x_next = x_temp;
+			else y_next = y_temp;
 		}
 
-		dist_final = visits[x_dest][y_dest].distance_from_source;
-		visits[x_dest][y_dest].st = taken;
-		for (int d = 0; d < 50; d++) {
-			for (int f = 0; f < 50; f++) {
-				cout << visits[d][f].st;
-			}
-			cout << endl;
-		}
+		dist_final = visits[y_next][x_next].distance_from_source;
 	}
 }
 
@@ -211,8 +194,8 @@ int main()
 	//Setting all values of the grid to 0
 	for (int d = 0; d < 1000; d++) {
 		for (int f = 0; f < 1000; f++) {
-			visits[d][f].st = available;
-			visits[d][f].distance_from_source = 0;
+			visits[f][d].st = available;
+			visits[f][d].distance_from_source = 0;
 		}
 	}
 
@@ -224,9 +207,9 @@ int main()
 		//Set all untaken cells back to available to prepare for the next net values
 		for (int d = 0; d < 1000; d++) {
 			for (int f = 0; f < 1000; f++) {
-				if (!visits[d][f].st == taken) {
-					visits[d][f].st = available;
-					visits[d][f].distance_from_source = 0;
+				if (!visits[f][d].st == taken) {
+					visits[f][d].st = available;
+					visits[f][d].distance_from_source = 0;
 				}
 			}
 		}
@@ -246,7 +229,7 @@ int main()
 
 
 			all.push({ x_coord, y_coord, dist }); //Pushing source into queue
-			visits[x_coord][y_coord].distance_from_source = all.front().distance;
+			visits[y_coord][x_coord].distance_from_source = all.front().distance;
 
 			int x_next, y_next, huh = 0;
 
@@ -255,7 +238,7 @@ int main()
 			{
 
 				Node in_while = all.front(); //Keeps track of the front node of the queue
-				visits[in_while.x][in_while.y].st = visited;
+				visits[in_while.y][in_while.x].st = visited;
 				
 
 				for (int ii = 0; ii < 4; ii++)
@@ -267,31 +250,20 @@ int main()
 					//If the destination has been found then backtrack using pathfinder function
 					if (x_next == x_destination && y_next == y_destination)
 					{
-						visits[x_next][y_next].distance_from_source = min_dist;
-						//pathfinder(x_next, y_next, nets[i].getLayer(counter2 + 1), min_dist, nets[i].getNetNum());
-							for (int d = 0; d < 30; d++) {
-								for (int f = 0; f < 50; f++) {
-									cout << visits[d][f].distance_from_source;
-								}
-								cout << endl;
-							}
-							//cout << x_next << "\t" << y_next << "\t" << min_dist << endl;
-
+						visits[y_next][x_next].distance_from_source = min_dist;
 						pathfinder(x_next, y_next, 1, min_dist, nets[i].getNetNum());
 						while (!all.empty()) { all.pop(); }
 					}
 
 
 
-					else if (inbound(x_next,y_next) && visits[x_next][y_next].st == available)
+					else if (inbound(x_next,y_next) && visits[y_next][x_next].st == available)
 					{
-						visits[x_next][y_next].distance_from_source = min_dist;
+						visits[y_next][x_next].distance_from_source = min_dist;
 						all.push({ x_next, y_next, min_dist });
-						visits[x_next][y_next].st = visited;
-						//cout << x_next << "\t" << y_next << "\t" << nets[i].getLayer(counter2 + 1) << "\t" << min_dist << "\t" << nets[i].getNetNum() << "\t I am not path finder" << endl;
+						visits[y_next][x_next].st = visited;
 					}
 
-					//else cout<<"invalid"<<endl;
 				}
 				if (!all.empty())
 					all.pop();
@@ -303,23 +275,18 @@ int main()
 
 
 	//*************************************************************** DEBUG Section ***************************************************************//
-	/*cout << nets[1].getNetNum() << endl;
-	cout << nets[1].getLayer(1) << endl;
-	cout << nets[1].getPinx(1) << endl;
-	cout << nets[1].getPiny(1) << endl;
-	cout << nets[1].numPoints;*/
 
 	//Closing "input" file
 	inFile.close();
 
 	cout << endl;
 
-	/*for (int d = 0; d < 100; d++) {
+	for (int d = 0; d < 100; d++) {
 		for (int f = 0; f < 100; f++) {
-			cout << visits[d][f].netn << "\t";
+			cout << visits[f][d].netn;
 		}
 		cout << endl;
-	}*/
+	}
 	cout << "Program ended";
 	system("pause");
 	return 0;
