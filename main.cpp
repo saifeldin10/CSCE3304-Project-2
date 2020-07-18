@@ -1,31 +1,172 @@
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <queue>
 #include "net.h"
+#include "net.h"
 
 //Macros
 #define NETSIZE 50
-enum status { empty, visited, taken };
-struct grid { int netn; status st; };
+enum status { available, visited, taken };
+struct grid { int netn; int distance_from_source; status st; };
+
+struct Node {
+	int x;
+	int y;
+	int distance;
+};
 
 using namespace std;
 
 //Global Variables
 net nets[NETSIZE];
-grid visits[1000][1000]; //2D Array that keeps track of which areas of the grid have been visited
-queue <int> X, Y;
+grid visits[50][1000][1000]; //2D Array that keeps track of which areas of the grid have been visited
+queue <Node> all;
+queue <Node> all2;
 int x_move[] = { -1,0,1,0 };
 int y_move[] = { 0,1,0,-1 };
 
-//Function that connects the pins
-void pathfinder(int x_source, int y_source,int x_dest, int y_dest, int layer_num){
-
-	int x_go_right = x_dest - x_source;
-	int y_go_up = y_dest - y_source;
-
+//Utility function to check if we're within boundaries
+bool inbound(int x_next, int y_next) {
+	return (!(x_next < 0 || x_next >= 1000 || y_next < 0 || y_next >= 1000));
 }
+
+//Function that connects the pins
+void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum) {
+	visits[layer_num][y_dest][x_dest].st = taken;
+
+	int dist_final = distance;
+	int extra_cost = 3;
+	int x_next = x_dest, y_next = y_dest;
+
+	visits[layer_num][x_dest][y_dest].netn = netnum;
+
+
+	while (dist_final > 1) {
+		visits[layer_num][x_next][y_next].st = taken;
+		bool up_check = false, down_check = false, right_check = false, left_check = false, tie_break = false;
+		int right_diff = 0, horizontal_direction = 0, horizontal_difference = 0, vertical_difference = 0, vertical_direction = 0, up_diff = 0, vertical_cost = 0, horizontal_cost = 0;
+		int up_val = 0, down_val = 0, left_val = 0, right_val = 0;
+		int x_temp = x_next, y_temp = y_next;
+		visits[layer_num][x_next][y_next].netn = netnum;
+
+
+		if (inbound(x_next, y_next - 1) && visits[layer_num][y_next - 1][x_next].st == visited) {
+			up_check = true;
+			up_val = visits[layer_num][y_next - 1][x_next].distance_from_source;
+		}
+		if (inbound(x_next, y_next + 1) && visits[layer_num][y_next + 1][x_next].st == visited) {
+			down_check = true;
+			down_val = visits[layer_num][y_next + 1][x_next].distance_from_source;
+		}
+		if (inbound(x_next - 1, y_next) && visits[layer_num][y_next][x_next - 1].st == visited) {
+			left_check = true;
+			left_val = visits[layer_num][y_next][x_next - 1].distance_from_source;
+		}
+		if (inbound(x_next + 1, y_next) && visits[layer_num][y_next][x_next + 1].st == visited) {
+			right_check = true;
+			right_val = visits[layer_num][y_next][x_next + 1].distance_from_source;
+		}
+
+		horizontal_difference = right_val - left_val;
+		vertical_difference = up_val - down_val;
+
+		if (horizontal_difference > 0) {
+			if (left_check) x_temp = x_temp - 1;
+			else x_temp = x_temp + 1;
+		}
+		else if (horizontal_difference < 0) {
+			if (right_check) x_temp = x_temp + 1;
+			else x_temp = x_temp - 1;
+		}
+		else x_temp = x_temp;
+
+
+		if (vertical_difference > 0) {
+			if (down_check) y_temp = y_temp + 1;
+			else y_temp = y_temp - 1;
+		}
+		else if (vertical_difference < 0) {
+			if (up_check) y_temp = y_temp - 1;
+			else y_temp = y_temp + 1;
+		}
+		else y_temp = y_temp;
+
+
+		if (layer_num == 1) {
+			vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source + extra_cost;
+			horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source;
+		}
+		else if (layer_num == 2) {
+			vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
+			horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source + extra_cost;
+		}
+
+		if (horizontal_cost > vertical_cost)
+		{
+			if (vertical_difference != 0)y_next = y_temp;
+			else  x_next = x_temp;
+		}
+		else
+		{
+			if (horizontal_difference != 0)x_next = x_temp;
+			else y_next = y_temp;
+		}
+
+		dist_final = visits[layer_num][y_next][x_next].distance_from_source;
+	}
+}
+
+//Function that implements lee's algorithm
+void lee(int x_coord,int y_coord,int first_layer,int x_destination, int y_destination, int second_layer,int dist, int i) {
+
+	all.push({ x_coord, y_coord, dist }); //Pushing source into queue
+	all2.push({ x_coord, y_coord, dist }); //Pushing source into the second queue
+	visits[first_layer][y_coord][x_coord].distance_from_source = all.front().distance;
+
+	//Targetfinding loop, keeps running until the source gets popped again
+	while (!all.empty())
+	{
+
+		int x_next = 0, y_next = 0, min_dist = 0;
+		bool via = false;
+		Node in_while = all.front(); //Keeps track of the front node of the queue
+		visits[first_layer][in_while.y][in_while.x].st = visited;
+
+
+
+		for (int ii = 0; ii < 4; ii++)
+		{
+			x_next = in_while.x + x_move[ii]; //Keeps track of the eventual moves in the x direction 
+			y_next = in_while.y + y_move[ii]; //Keeps track of the eventual moves in the y direction
+			min_dist = in_while.distance + 1;
+
+			//If the destination has been found then backtrack using pathfinder function
+			if (x_next == x_destination && y_next == y_destination)
+			{
+				visits[first_layer][y_next][x_next].distance_from_source = min_dist;
+					pathfinder(x_next, y_next, 1, min_dist, nets[i].getNetNum());
+					while (!all.empty()) { all.pop(); }
+			}
+
+
+			else if (inbound(x_next, y_next) && visits[first_layer][y_next][x_next].st == available)
+			{
+				visits[first_layer][y_next][x_next].distance_from_source = min_dist;
+				all.push({ x_next, y_next, min_dist });
+				all2.push({ x_next, y_next, min_dist });
+				visits[first_layer][y_next][x_next].st = visited;
+			}
+
+		}
+		if (!all.empty())
+			all.pop();
+	}
+}
+
+
+
 
 //Coordinate Extractor function
 void extract(string str, int i)
@@ -52,8 +193,8 @@ void extract(string str, int i)
 		{
 			if (cc == 0) //Extract Layer value
 				nets[i].setLayer(found, inc);
-			else 
-				if (cc == 1) 
+			else
+				if (cc == 1)
 					nets[i].setPx(found, inc); //Extract Pin x value
 				else
 					nets[i].setPy(found, inc); //Extract Pin y value
@@ -61,12 +202,12 @@ void extract(string str, int i)
 		cc++;
 		temp = "";
 	}
-	
+
 	nets[i].numPoints = inc + 1; //Store the number of points there are in the net
 }
 
 //MAIN
-void main()
+int main()
 {
 	string input[50]; //Assuming the input file will not take more than 50 nets
 	ifstream inFile;
@@ -74,7 +215,7 @@ void main()
 	//************************************************************ FILE OPEN AND PARSE ************************************************************//
 
 	//Opening "input" file
-	inFile.open("input.txt");
+	inFile.open("C:\\Users\\Youssef Ragai\\Desktop\\New folder\\CMakeProject1\\input.txt");
 	if (!inFile) {
 		cout << "File failed to open!" << endl;
 		exit(1);
@@ -102,67 +243,72 @@ void main()
 	//***************************************************************** ALGORITHM *****************************************************************//
 
 
-		for (int d=0; d<1000; d++){
-			for (int f=0; f<1000; f++){
-				visits[d][f].st = empty;
+	//Setting all values of the grid to 0
+	for (int d = 0; d < 1000; d++) {
+		for (int f = 0; f < 1000; f++) {
+			for (int e = 0; e < 50; e++) {
+			visits[e][f][d].st = available;
+			visits[e][f][d].distance_from_source = 0;
 			}
 		}
+	}
 
-	for (int i=0; i<NETSIZE; i++){
+	//Loop that goes through the list of nets
+	for (int i = 0; i < num; i++) {
 
-		int counter = nets[i].numPoints;
-		int counter2 = 0;
+		int counter2 = 0; //Counter that keeps track of the nets that have been connected 
+		int next_destination = 0;
+		int counter = nets[i].numPoints - 1; //Counter that keeps track of the number of points in the net
 
-		X.push(nets[i].getPinx(counter2));
-		Y.push(nets[i].getPiny(counter2));
+		while (counter2 < counter)
+		{
+			bool via = false;
+			int dist = 1;
+			int min_dist = 0;
+			next_destination = next_destination + 1;
 
-		int x_source, y_source, x_next, y_next;
 
-		/*for (int d=0; d<1000; d++){
-			for (int f=0; f<0; f++){
-				if (!visits[d][f].st = taken) visits[d][f].st = empty;
+			for (int d = 0; d < 1000; d++) {
+				for (int f = 0; f < 1000; f++) {
+					for (int e = 0; e < 50; e++) {
+						if (visits[e][f][d].st != taken) {
+							visits[e][f][d].st = available;
+							visits[e][f][d].distance_from_source = 0;
+						}
+					}
+				}
 			}
-		}*/
 
-		while (!X.empty()){
+			//Setting the values of the source and the destination accordingly
+			int x_coord = nets[i].getPinx(0);
+			int y_coord = nets[i].getPiny(0);
+			int first_layer = nets[i].getLayer(0);
+			int x_destination = nets[i].getPinx(next_destination);
+			int y_destination = nets[i].getPiny(next_destination);
+			int second_layer = nets[i].getLayer(next_destination);
 
-			x_source = X.front();
-			y_source = Y.front();
-
-			for (int ii=0; ii<4; ii++){
-				x_next = x_source + x_move[ii];
-				y_next = y_source + y_move[ii];
+			lee(x_coord, y_coord, first_layer, x_destination, y_destination, second_layer, dist, i);
 
 			
-				if (x_next == nets[i].getPinx(counter2+1) && y_next == nets[i].getPiny(counter2+1)){
-
-					visits[x_next][y_next].st = visited;
-					pathfinder(x_source, y_source, x_next, y_next, nets[i].getPiny(counter2+1));
-
-				}
-					else if ((!(x_next < 0 || x_next =>1000 || y_next < 0 || y_next =>1000)) && visits[x_next][y_next].st = empty){
-					X.push(x_next);
-					Y.push(y_next);
-					visits[x_next][y_next].st = visited;
-					}
-			}
-		X.pop();
-		Y.pop();
+			counter2++;
 		}
 	}
 
 
-
 	//*************************************************************** DEBUG Section ***************************************************************//
-	/*cout << nets[1].getNetNum() << endl;
-	cout << nets[1].getLayer(1) << endl;
-	cout << nets[1].getPinx(1) << endl;
-	cout << nets[1].getPiny(1) << endl;
-	cout << nets[1].numPoints;*/
-	
+
 	//Closing "input" file
 	inFile.close();
 
 	cout << endl;
+
+	for (int d = 0; d < 100; d++) {
+		for (int f = 0; f < 100; f++) {
+				cout << visits[1][f][d].netn;
+		}
+		cout << endl;
+	}
+	cout << "Program ended"<<endl;
 	system("pause");
+	return 0;
 }

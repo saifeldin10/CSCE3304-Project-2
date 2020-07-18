@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <iostream>
 
 using namespace std;
@@ -13,7 +13,7 @@ private:
 
 public:
 	int numPoints = 0;
-	
+
 	bool setNum(int num)
 	{
 		netNum = num;
