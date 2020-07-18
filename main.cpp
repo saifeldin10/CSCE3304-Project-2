@@ -4,7 +4,6 @@
 #include <sstream>
 #include <queue>
 #include "net.h"
-#include "net.h"
 
 //Macros
 #define NETSIZE 50
