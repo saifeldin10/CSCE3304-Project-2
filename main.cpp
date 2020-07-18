@@ -293,16 +293,13 @@ int main()
 			counter2++;
 		}
 	}
-
-
-	//*************************************************************** DEBUG Section ***************************************************************//
 	
 	//Output the taken cells to display the connection paths for each net
 	int n = 0; //Keep track of which net the output cycle is on
 	while (n < num - 1)
 	{
 		cout << "net" << n + 1 << " ";
-		for (int i = 0; i < 2; i++)	//Assuming there are only three layers
+		for (int i = 0; i < 50; i++)	//Assuming there are only three layers
 		{
 			for (int j = 0; j < GRIDSIZE; j++)
 			{
