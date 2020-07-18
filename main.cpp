@@ -8,6 +8,7 @@
 
 //Macros
 #define NETSIZE 50
+#define GRIDSIZE 1000
 enum status { available, visited, taken };
 struct grid { int netn; int distance_from_source; status st; };
 
@@ -21,7 +22,7 @@ using namespace std;
 
 //Global Variables
 net nets[NETSIZE];
-grid visits[50][1000][1000]; //2D Array that keeps track of which areas of the grid have been visited
+grid visits[50][GRIDSIZE][GRIDSIZE]; //2D Array that keeps track of which areas of the grid have been visited
 queue <Node> all;
 queue <Node> all2;
 int x_move[] = { -1,0,1,0 };
@@ -244,8 +245,8 @@ int main()
 
 
 	//Setting all values of the grid to 0
-	for (int d = 0; d < 1000; d++) {
-		for (int f = 0; f < 1000; f++) {
+	for (int d = 0; d < GRIDSIZE; d++) {
+		for (int f = 0; f < GRIDSIZE; f++) {
 			for (int e = 0; e < 50; e++) {
 			visits[e][f][d].st = available;
 			visits[e][f][d].distance_from_source = 0;
@@ -268,8 +269,8 @@ int main()
 			next_destination = next_destination + 1;
 
 
-			for (int d = 0; d < 1000; d++) {
-				for (int f = 0; f < 1000; f++) {
+			for (int d = 0; d < GRIDSIZE; d++) {
+				for (int f = 0; f < GRIDSIZE; f++) {
 					for (int e = 0; e < 50; e++) {
 						if (visits[e][f][d].st != taken) {
 							visits[e][f][d].st = available;
@@ -296,7 +297,31 @@ int main()
 
 
 	//*************************************************************** DEBUG Section ***************************************************************//
+	
+	//Output the taken cells to display the connection paths for each net
+	int n = 0; //Keep track of which net the output cycle is on
+	while (n < num - 1)
+	{
+		cout << "net" << n + 1 << " ";
+		for (int i = 0; i < 2; i++)	//Assuming there are only three layers
+		{
+			for (int j = 0; j < GRIDSIZE; j++)
+			{
+				for (int k = 0; k < GRIDSIZE; k++)
+				{
+					//Print if the cell traversed is taken and belongs to the net being outputted
+					if ((test[i][j][k].st == taken) && (test[i][j][k].netn == n + 1))
+					{
+						cout << "(" << i + 1 << ", " << j + 1 << ", " << k + 1 << ") ";
+					}
 
+				}
+			}
+		}
+		cout << endl;
+		n++;
+	}
+	
 	//Closing "input" file
 	inFile.close();
 
