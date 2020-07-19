@@ -242,13 +242,19 @@ int main()
 {
 	string input[50]; //Assuming the input file will not take more than 50 nets
 	ifstream inFile;
+	ofstream outFile;
 
 	//************************************************************ FILE OPEN AND PARSE ************************************************************//
 
-	//Opening "input" file
-	inFile.open("C:\\Users\\Youssef Ragai\\Desktop\\New folder\\CMakeProject1\\input.txt");
+	//Opening "input" and "output" file
+	inFile.open("input.txt");
+	outFile.open("output.txt");
 	if (!inFile) {
-		cout << "File failed to open!" << endl;
+		cout << "RUMBLE! File failed to open!" << endl;
+		exit(1);
+	}
+	if (!outFile) {
+		cout << "RUMBLE! File failed to open!" << endl;
 		exit(1);
 	}
 
@@ -329,6 +335,7 @@ int main()
 	while (n < num - 1)
 	{
 		cout << "net" << n + 1 << " ";
+		outFile << "net" << n + 1 << " ";
 		for (int i = 0; i < 50; i++)	//Assuming there are only three layers
 		{
 			for (int j = 0; j < GRIDSIZE; j++)
@@ -339,17 +346,20 @@ int main()
 					if ((test[i][j][k].st == taken) && (test[i][j][k].netn == n + 1))
 					{
 						cout << "(" << i + 1 << ", " << j + 1 << ", " << k + 1 << ") ";
+						outFile << "(" << i + 1 << ", " << j + 1 << ", " << k + 1 << ") ";
 					}
 
 				}
 			}
 		}
 		cout << endl;
+		outFile << endl;
 		n++;
 	}
 	
 	//Closing "input" file
 	inFile.close();
+	outFile.close();
 
 	cout << endl;
 
@@ -366,7 +376,8 @@ int main()
 		}
 		cout << endl;
 	}
-	cout << "Program ended"<<endl;
+	
+	cout << "Program terminated..."<<endl;
 	system("pause");
 	return 0;
 }
