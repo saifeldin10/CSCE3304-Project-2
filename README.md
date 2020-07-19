@@ -15,5 +15,5 @@ Assumptions:
 - If we wish to create a connection between Net1 and Net2, the source coordinates for Net1 and Net2 need to be 
 empty and available.
 - The difference in layer numbers in the same net should not exceed more than 1. 
-  e.g. net1 (1, 2 ,3) (2, 5, 6) (3, 3, 8) is a valid input
+  e.g. net1 (1, 2 ,3) (2, 5, 6) (3, 3, 8) is a valid input, however
        net1 (1, 2 ,3) (4, 5, 6) (2, 3, 8) is not a valid input
