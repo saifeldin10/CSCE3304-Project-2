@@ -362,8 +362,8 @@ int main()
 	outFile.close();
 
 	cout << endl;
-
-	for (int d = 0; d < 100; d++) {
+	//*************************************************************** DEBUG Section ***************************************************************//
+	/*for (int d = 0; d < 100; d++) {
 		for (int f = 0; f < 100; f++) {
 				cout << visits[1][f][d].netn;
 		}
@@ -376,7 +376,7 @@ int main()
 		}
 		cout << endl;
 	}
-	
+	*/
 	cout << "Program terminated..."<<endl;
 	system("pause");
 	return 0;
