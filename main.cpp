@@ -52,7 +52,7 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 		//int extra_cost = 5;
 		visits[layer_num][x_next][y_next].netn = netnum;
 
-
+		//Check the source's adjacent cells, are they visited? if yes, what are their values?
 		if (inbound(x_next, y_next - 1) && visits[layer_num][y_next - 1][x_next].st == visited) {
 			up_check = true;
 			up_val = visits[layer_num][y_next - 1][x_next].distance_from_source;
@@ -70,9 +70,11 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 			right_val = visits[layer_num][y_next][x_next + 1].distance_from_source;
 		}
 
+		//To eliminate two directions, we have to check the net ditance horizontally and vertically
 		horizontal_difference = right_val - left_val;
 		vertical_difference = up_val - down_val;
 
+		//Choosing whether to go right or left. 
 		if (horizontal_difference > 0) {
 			if (left_check) x_temp = x_temp - 1;
 			else x_temp = x_temp + 1;
@@ -83,7 +85,7 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 		}
 		else x_temp = x_temp;
 
-
+		//Choosing whether to go up or down. 
 		if (vertical_difference > 0) {
 			if (down_check) y_temp = y_temp + 1;
 			else y_temp = y_temp - 1;
@@ -95,48 +97,31 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 		else y_temp = y_temp;
 
 
-		//if (layer_num == 2) {
-		//	vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
-		//	horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source + extra_cost;
-		//}
-		//else if (layer_num == 2) {
-		//	vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
-		//	horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source + extra_cost;
-		//}
-		//else {
-			vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
-			horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source;
-		//}
 
+		vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
+		horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source;
+
+		//now comparing whether to move horizontally or vertically
 		if (horizontal_cost > vertical_cost)
 		{
 			if (vertical_difference != 0)y_next = y_temp;
 			else  x_next = x_temp;
 		}
-		else 
+		else
 		{
 			if (horizontal_difference != 0)x_next = x_temp;
 			else y_next = y_temp;
 		}
-		//else {
-		//	if (vertical_difference != 0)y_next = y_temp;
-		//	else  x_next = x_temp;
-		//}
 
 		dist_final = visits[layer_num][y_next][x_next].distance_from_source;
-		//for (int d = 0; d < 100; d++) {
-		//	for (int f = 0; f < 100; f++) {
-		//		cout << visits[layer_num][f][d].netn;
-		//	}
-		//	cout << endl;
-		//}
+
 	}
 }
 
 
 
 //Function that implements lee's algorithm
-void lee(int x_coord,int y_coord,int first_layer,int x_destination, int y_destination, int second_layer,int dist, int i) {
+void lee(int x_coord, int y_coord, int first_layer, int x_destination, int y_destination, int second_layer, int dist, int i) {
 
 	while (!all2.empty()) { all2.pop(); }
 	all.push({ x_coord, y_coord, dist }); //Pushing source into queue
@@ -147,7 +132,7 @@ void lee(int x_coord,int y_coord,int first_layer,int x_destination, int y_destin
 	if (first_layer < second_layer) new_first_layer++;
 	else new_first_layer--;
 	//visits[new_first_layer][y_coord][x_coord].distance_from_source = all.front().distance;
-	
+
 	//visits[first_layer][y_coord][x_coord].st = taken;
 	//Targetfinding loop, keeps running until the source gets popped again
 	while (!all.empty())
@@ -167,6 +152,9 @@ void lee(int x_coord,int y_coord,int first_layer,int x_destination, int y_destin
 			y_next = in_while.y + y_move[ii]; //Keeps track of the eventual moves in the y direction
 			min_dist = in_while.distance + 1;
 
+
+			//The next statement is the essence of the multi-layering simulation, until we are on the same layer we are going to install vias on the source coordinates
+			//on the initial layer and all layers in between
 			if (first_layer != second_layer) {
 				visits[first_layer][x_coord][y_coord].st = taken;
 				visits[first_layer][x_coord][y_coord].netn = nets[i].getNetNum();
@@ -184,7 +172,7 @@ void lee(int x_coord,int y_coord,int first_layer,int x_destination, int y_destin
 				while (!all.empty()) { all.pop(); }
 			}
 
-
+			//If destination is not found, we push a node with the new coordinates to the queue, we edit the distance and label it as visited
 			else if (inbound(x_next, y_next) && visits[new_first_layer][y_next][x_next].st == available)
 			{
 				visits[new_first_layer][y_next][x_next].distance_from_source = min_dist;
@@ -284,8 +272,8 @@ int main()
 	for (int d = 0; d < GRIDSIZE; d++) {
 		for (int f = 0; f < GRIDSIZE; f++) {
 			for (int e = 0; e < 50; e++) {
-			visits[e][f][d].st = available;
-			visits[e][f][d].distance_from_source = 0;
+				visits[e][f][d].st = available;
+				visits[e][f][d].distance_from_source = 0;
 			}
 		}
 	}
@@ -324,12 +312,13 @@ int main()
 			int y_destination = nets[i].getPiny(next_destination);
 			int second_layer = nets[i].getLayer(next_destination);
 
+			//calling lee's algorithm function, passing i is important so we can extract local data
 			lee(x_coord, y_coord, first_layer, x_destination, y_destination, second_layer, dist, i);
 
 			counter2++;
 		}
 	}
-	
+
 	//Output the taken cells to display the connection paths for each net
 	int n = 0; //Keep track of which net the output cycle is on
 	while (n < num - 1)
@@ -356,7 +345,7 @@ int main()
 		outFile << endl;
 		n++;
 	}
-	
+
 	//Closing "input" file
 	inFile.close();
 	outFile.close();
@@ -377,7 +366,7 @@ int main()
 		cout << endl;
 	}
 	*/
-	cout << "Program terminated..."<<endl;
+	cout << "Program terminated..." << endl;
 	system("pause");
 	return 0;
 }
