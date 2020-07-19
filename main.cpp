@@ -343,7 +343,7 @@ int main()
 				for (int k = 0; k < GRIDSIZE; k++)
 				{
 					//Print if the cell traversed is taken and belongs to the net being outputted
-					if ((test[i][j][k].st == taken) && (test[i][j][k].netn == n + 1))
+					if ((visits[i][j][k].st == taken) && (visits[i][j][k].netn == n + 1))
 					{
 						cout << "(" << i + 1 << ", " << j + 1 << ", " << k + 1 << ") ";
 						outFile << "(" << i + 1 << ", " << j + 1 << ", " << k + 1 << ") ";
