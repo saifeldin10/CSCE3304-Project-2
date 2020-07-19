@@ -40,7 +40,7 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 	int extra_cost = 3;
 	int x_next = x_dest, y_next = y_dest;
 
-	visits[layer_num][x_dest][y_dest].netn = netnum;
+	visits[layer_num][y_dest][x_dest].netn = netnum;
 
 
 	while (dist_final > 1) {
@@ -49,6 +49,7 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 		int right_diff = 0, horizontal_direction = 0, horizontal_difference = 0, vertical_difference = 0, vertical_direction = 0, up_diff = 0, vertical_cost = 0, horizontal_cost = 0;
 		int up_val = 0, down_val = 0, left_val = 0, right_val = 0;
 		int x_temp = x_next, y_temp = y_next;
+		//int extra_cost = 5;
 		visits[layer_num][x_next][y_next].netn = netnum;
 
 
@@ -94,37 +95,60 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 		else y_temp = y_temp;
 
 
-		if (layer_num == 1) {
-			vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source + extra_cost;
-			horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source;
-		}
-		else if (layer_num == 2) {
+		//if (layer_num == 2) {
+		//	vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
+		//	horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source + extra_cost;
+		//}
+		//else if (layer_num == 2) {
+		//	vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
+		//	horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source + extra_cost;
+		//}
+		//else {
 			vertical_cost = visits[layer_num][y_temp][x_next].distance_from_source;
-			horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source + extra_cost;
-		}
+			horizontal_cost = visits[layer_num][y_next][x_temp].distance_from_source;
+		//}
 
 		if (horizontal_cost > vertical_cost)
 		{
 			if (vertical_difference != 0)y_next = y_temp;
 			else  x_next = x_temp;
 		}
-		else
+		else 
 		{
 			if (horizontal_difference != 0)x_next = x_temp;
 			else y_next = y_temp;
 		}
+		//else {
+		//	if (vertical_difference != 0)y_next = y_temp;
+		//	else  x_next = x_temp;
+		//}
 
 		dist_final = visits[layer_num][y_next][x_next].distance_from_source;
+		//for (int d = 0; d < 100; d++) {
+		//	for (int f = 0; f < 100; f++) {
+		//		cout << visits[layer_num][f][d].netn;
+		//	}
+		//	cout << endl;
+		//}
 	}
 }
+
+
 
 //Function that implements lee's algorithm
 void lee(int x_coord,int y_coord,int first_layer,int x_destination, int y_destination, int second_layer,int dist, int i) {
 
+	while (!all2.empty()) { all2.pop(); }
 	all.push({ x_coord, y_coord, dist }); //Pushing source into queue
 	all2.push({ x_coord, y_coord, dist }); //Pushing source into the second queue
 	visits[first_layer][y_coord][x_coord].distance_from_source = all.front().distance;
-
+	int new_first_layer = first_layer;
+	int new_second_layer = second_layer;
+	if (first_layer < second_layer) new_first_layer++;
+	else new_first_layer--;
+	//visits[new_first_layer][y_coord][x_coord].distance_from_source = all.front().distance;
+	
+	//visits[first_layer][y_coord][x_coord].st = taken;
 	//Targetfinding loop, keeps running until the source gets popped again
 	while (!all.empty())
 	{
@@ -138,33 +162,40 @@ void lee(int x_coord,int y_coord,int first_layer,int x_destination, int y_destin
 
 		for (int ii = 0; ii < 4; ii++)
 		{
+
 			x_next = in_while.x + x_move[ii]; //Keeps track of the eventual moves in the x direction 
 			y_next = in_while.y + y_move[ii]; //Keeps track of the eventual moves in the y direction
 			min_dist = in_while.distance + 1;
 
+			if (first_layer != second_layer) {
+				visits[first_layer][x_coord][y_coord].st = taken;
+				visits[first_layer][x_coord][y_coord].netn = nets[i].getNetNum();
+			}
+			else new_first_layer = first_layer;
+
+			visits[first_layer][x_coord][y_coord].netn = nets[i].getNetNum();
+			visits[new_first_layer][y_coord][x_coord].distance_from_source = 1;
+
 			//If the destination has been found then backtrack using pathfinder function
 			if (x_next == x_destination && y_next == y_destination)
 			{
-				visits[first_layer][y_next][x_next].distance_from_source = min_dist;
-					pathfinder(x_next, y_next, 1, min_dist, nets[i].getNetNum());
-					while (!all.empty()) { all.pop(); }
+				visits[new_first_layer][y_next][x_next].distance_from_source = min_dist;
+				pathfinder(x_next, y_next, new_first_layer, min_dist, nets[i].getNetNum());
+				while (!all.empty()) { all.pop(); }
 			}
 
 
-			else if (inbound(x_next, y_next) && visits[first_layer][y_next][x_next].st == available)
+			else if (inbound(x_next, y_next) && visits[new_first_layer][y_next][x_next].st == available)
 			{
-				visits[first_layer][y_next][x_next].distance_from_source = min_dist;
+				visits[new_first_layer][y_next][x_next].distance_from_source = min_dist;
 				all.push({ x_next, y_next, min_dist });
-				all2.push({ x_next, y_next, min_dist });
-				visits[first_layer][y_next][x_next].st = visited;
+				visits[new_first_layer][y_next][x_next].st = visited;
 			}
-
 		}
 		if (!all.empty())
 			all.pop();
 	}
 }
-
 
 
 
@@ -289,7 +320,6 @@ int main()
 
 			lee(x_coord, y_coord, first_layer, x_destination, y_destination, second_layer, dist, i);
 
-			
 			counter2++;
 		}
 	}
@@ -305,6 +335,13 @@ int main()
 	for (int d = 0; d < 100; d++) {
 		for (int f = 0; f < 100; f++) {
 				cout << visits[1][f][d].netn;
+		}
+		cout << endl;
+	}
+	cout << endl;
+	for (int d = 0; d < 100; d++) {
+		for (int f = 0; f < 100; f++) {
+			cout << visits[2][f][d].netn;
 		}
 		cout << endl;
 	}
