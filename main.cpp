@@ -264,7 +264,7 @@ int main()
 	for (int i = 0; i < num; i++)
 	{
 		nets[i].setNum(i + 1);
-		input[i].erase(0, 4);
+		input[i].erase(0, 5);
 		for (int j = 0; j < input[i].size(); j++)
 			if (input[i].at(j) == '(' || input[i].at(j) == ')')
 				input[i].erase(input[i].begin() + j);
