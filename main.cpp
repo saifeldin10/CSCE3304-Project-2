@@ -4,6 +4,7 @@
 #include <sstream>
 #include <queue>
 #include "net.h"
+using namespace std;
 
 //Macros
 #define NETSIZE 50
@@ -17,7 +18,7 @@ struct Node {
 	int distance;
 };
 
-using namespace std;
+
 
 //Global Variables
 net nets[NETSIZE];
@@ -35,10 +36,14 @@ bool inbound(int x_next, int y_next) {
 //Function that connects the pins
 void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum) {
 	visits[layer_num][y_dest][x_dest].st = taken;
-
+	bool horizontal_layer = false, vertical_layer = false;
 	int dist_final = distance;
 	int extra_cost = 3;
 	int x_next = x_dest, y_next = y_dest;
+	int temp_var_x = 0, temp_var_y = 0;
+	int temp_layer = layer_num;
+	//if (layer_num % 2 != 0) horizontal_layer = true;
+	//else vertical_layer = true;
 
 	visits[layer_num][y_dest][x_dest].netn = netnum;
 
@@ -49,8 +54,13 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 		int right_diff = 0, horizontal_direction = 0, horizontal_difference = 0, vertical_difference = 0, vertical_direction = 0, up_diff = 0, vertical_cost = 0, horizontal_cost = 0;
 		int up_val = 0, down_val = 0, left_val = 0, right_val = 0;
 		int x_temp = x_next, y_temp = y_next;
-		//int extra_cost = 5;
-		visits[layer_num][x_next][y_next].netn = netnum;
+		temp_var_x = x_next;
+		temp_var_y = y_next;
+		//visits[layer_num][x_next][y_next].netn = netnum;
+		visits[temp_layer][x_next][y_next].netn = netnum;
+		if (temp_layer % 2 != 0) horizontal_layer = true;
+		else vertical_layer = true;
+		
 
 		//Check the source's adjacent cells, are they visited? if yes, what are their values?
 		if (inbound(x_next, y_next - 1) && visits[layer_num][y_next - 1][x_next].st == visited) {
@@ -113,9 +123,29 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 			else y_next = y_temp;
 		}
 
+		if (temp_var_x != x_next) {
+			if (vertical_layer) temp_layer = layer_num;
+			else {
+				temp_layer = layer_num + 1;
+				//visits[layer_num][x_next][y_next].netn = netnum;
+			}
+		}
+		else {
+			if (vertical_layer) {
+				temp_layer = layer_num - 1;
+				//visits[layer_num][x_next][y_next].netn = netnum;
+			}
+			else temp_layer = layer_num;
+		}
+
+		//visits[layer_num][x_next][y_next].netn = netnum;
+		visits[temp_layer][x_next][y_next].netn = netnum;
 		dist_final = visits[layer_num][y_next][x_next].distance_from_source;
+		visits[temp_layer][x_next][y_next].st = taken;
+
 
 	}
+	visits[temp_layer][x_next][y_next].netn = netnum;
 }
 
 
@@ -123,6 +153,7 @@ void pathfinder(int x_dest, int y_dest, int layer_num, int distance, int netnum)
 //Function that implements lee's algorithm
 void lee(int x_coord, int y_coord, int first_layer, int x_destination, int y_destination, int second_layer, int dist, int i) {
 
+	bool horizontal = false, vertical = false, horizontal_layer = false, vertical_layer = false;
 	while (!all2.empty()) { all2.pop(); }
 	all.push({ x_coord, y_coord, dist }); //Pushing source into queue
 	all2.push({ x_coord, y_coord, dist }); //Pushing source into the second queue
@@ -131,9 +162,10 @@ void lee(int x_coord, int y_coord, int first_layer, int x_destination, int y_des
 	int new_second_layer = second_layer;
 	if (first_layer < second_layer) new_first_layer++;
 	else new_first_layer--;
-	//visits[new_first_layer][y_coord][x_coord].distance_from_source = all.front().distance;
+	if (first_layer % 2 != 0) horizontal_layer = true;
+	else vertical_layer = true;
 
-	//visits[first_layer][y_coord][x_coord].st = taken;
+	int temp_layer;
 	//Targetfinding loop, keeps running until the source gets popped again
 	while (!all.empty())
 	{
@@ -164,6 +196,16 @@ void lee(int x_coord, int y_coord, int first_layer, int x_destination, int y_des
 			visits[first_layer][x_coord][y_coord].netn = nets[i].getNetNum();
 			visits[new_first_layer][y_coord][x_coord].distance_from_source = 1;
 
+			if (ii % 2 != 0) {
+				if (vertical_layer) temp_layer = first_layer - 1;
+				else temp_layer = first_layer;
+			}
+			else {
+				if (vertical_layer) temp_layer = first_layer;
+				else temp_layer = first_layer + 1;
+			}
+
+
 			//If the destination has been found then backtrack using pathfinder function
 			if (x_next == x_destination && y_next == y_destination)
 			{
@@ -173,11 +215,13 @@ void lee(int x_coord, int y_coord, int first_layer, int x_destination, int y_des
 			}
 
 			//If destination is not found, we push a node with the new coordinates to the queue, we edit the distance and label it as visited
-			else if (inbound(x_next, y_next) && visits[new_first_layer][y_next][x_next].st == available)
+			else if (inbound(x_next, y_next) && visits[temp_layer][y_next][x_next].st == available)
 			{
+				visits[temp_layer][y_next][x_next].distance_from_source = min_dist;
 				visits[new_first_layer][y_next][x_next].distance_from_source = min_dist;
 				all.push({ x_next, y_next, min_dist });
 				visits[new_first_layer][y_next][x_next].st = visited;
+				visits[temp_layer][y_next][x_next].st = visited;
 			}
 		}
 		if (!all.empty())
@@ -235,7 +279,7 @@ int main()
 	//************************************************************ FILE OPEN AND PARSE ************************************************************//
 
 	//Opening "input" and "output" file
-	inFile.open("input.txt");
+	inFile.open("C:\\Users\\Youssef Ragai\\Desktop\\New folder\\CMakeProject1\\input.txt");
 	outFile.open("output.txt");
 	if (!inFile) {
 		cout << "RUMBLE! File failed to open!" << endl;
@@ -321,7 +365,7 @@ int main()
 
 	//Output the taken cells to display the connection paths for each net
 	int n = 0; //Keep track of which net the output cycle is on
-	while (n < num)
+	while (n < num - 1)
 	{
 		cout << "net" << n + 1 << " ";
 		outFile << "net" << n + 1 << " ";
@@ -332,10 +376,10 @@ int main()
 				for (int k = 0; k < GRIDSIZE; k++)
 				{
 					//Print if the cell traversed is taken and belongs to the net being outputted
-					if ((visits[i][j][k].st == taken) && (visits[i][j][k].netn == n + 1))
+					if (visits[i][j][k].netn == n + 1)
 					{
-						cout << "(" << i + 1 << ", " << j + 1 << ", " << k + 1 << ") ";
-						outFile << "(" << i + 1 << ", " << j + 1 << ", " << k + 1 << ") ";
+						cout << "(" << i +1 << ", " << k  << ", " << j  << ") ";
+						outFile << "(" << i +1 << ", " << k  << ", " << j  << ") ";
 					}
 
 				}
@@ -352,20 +396,8 @@ int main()
 
 	cout << endl;
 	//*************************************************************** DEBUG Section ***************************************************************//
-	/*for (int d = 0; d < 100; d++) {
-		for (int f = 0; f < 100; f++) {
-				cout << visits[1][f][d].netn;
-		}
-		cout << endl;
-	}
-	cout << endl;
-	for (int d = 0; d < 100; d++) {
-		for (int f = 0; f < 100; f++) {
-			cout << visits[2][f][d].netn;
-		}
-		cout << endl;
-	}
-	*/
+
+	
 	cout << "Program terminated..." << endl;
 	system("pause");
 	return 0;
