@@ -365,7 +365,7 @@ int main()
 
 	//Output the taken cells to display the connection paths for each net
 	int n = 0; //Keep track of which net the output cycle is on
-	while (n < num - 1)
+	while (n < num)
 	{
 		cout << "net" << n + 1 << " ";
 		outFile << "net" << n + 1 << " ";
